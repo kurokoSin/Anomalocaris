@@ -1,7 +1,0 @@
-#!/usr/bin/expect -f
-spawn ssh-copy-id $argv
-expect "(yes/no)?"
-send "yes\n"
-expect "password:"
-send "vagrant\n"
-expect eof

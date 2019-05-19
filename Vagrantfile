@@ -5,12 +5,19 @@ Vagrant.configure(2) do |config|
     remote.vm.box = "generic/ubuntu1804"
     remote.vm.hostname = "ansible-remote"
     remote.vm.network "private_network", ip: "192.168.122.102"
+    remote.vm.synced_folder './remote/', '/vagrant', type: '9p', :mount_options => ['dmode=775', 'fmode=664']
 
     remote.vm.provider "virtualbox" do |vb|
       vb.memory = 1024
       vb.cpus = 2
       # vb.name = "ansible-remote"
     end
+    
+    remote.vm.provision "shell", inline: <<-SHELL
+      # DNS config
+      sed -i.bak -e "s/^DNS=.*$/DNS=8.8.8.8 192.168.122.1/g" /etc/systemd/resolved.conf
+      systemctl restart systemd-resolved.service
+    SHELL
   end
 
   # control-VM
@@ -18,7 +25,7 @@ Vagrant.configure(2) do |config|
     control.vm.box = "generic/ubuntu1804"
     control.vm.hostname = "ansible-control"
     control.vm.network "private_network", ip: "192.168.122.101"
-    control.vm.synced_folder './', '/vagrant', type: '9p', :mount_options => ['dmode=775', 'fmode=664']
+    control.vm.synced_folder './control/', '/vagrant', type: '9p', :mount_options => ['dmode=775', 'fmode=664']
 
     control.vm.provider "virtualbox" do |vb|
       vb.memory = 512
@@ -47,21 +54,27 @@ Vagrant.configure(2) do |config|
       export DEBIAN_FRONTEND=noninteractive
       apt -y update
       apt -y install ubuntu-defaults-ja
-      apt -y install expect
+      
+      # pexpect
+      # apt -y install expect
+      apt -y install python-pip
+      pip install pexpect
+      
       # ansible 
       apt -y install software-properties-common
       apt-add-repository --yes --update ppa:ansible/ansible
       apt -y install ansible
       apt -y autoremove
 
-      cp -f /vagrant/sendkey.expect ~/sendkey.expect
-      chmod 774 ~/sendkey.expect
+      # ssh
+      cp -f /vagrant/pexpect_sendkey.py ~/pexepect_sendkey.py
+      chmod 774 ~/pexpect_sendkey.py
 
       mkdir -p ~/.ssh
       ssh-keygen -N "" -t ed25519 -f ~/.ssh/id_ed25519
 
       rm -f ~/.ssh/known_hosts
-      ~/sendkey.expect vagrant@192.168.122.102
+      ~/pexpect_sendkey.py vagrant@192.168.122.102
     SHELL
   end
 
