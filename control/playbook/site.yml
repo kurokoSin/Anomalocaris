@@ -1,0 +1,5 @@
+---
+- hosts: srvs
+  tasks:
+    - name: ping remote-VM
+      action: ping
