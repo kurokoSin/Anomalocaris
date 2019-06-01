@@ -1,0 +1,12 @@
+---
+- name: ntp install
+  apt: >
+    name="ntp"
+    update_cache=yes
+
+- name: ntp server setting
+  template: >
+    src="ntp.conf.j2"
+    dest="/etc/ntp.conf"
+  notify:
+    - restart ntp

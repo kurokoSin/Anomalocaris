@@ -1,5 +1,0 @@
----
-- hosts: remote-vms
-  tasks:
-    - name: ping remote-VM
-      action: ping

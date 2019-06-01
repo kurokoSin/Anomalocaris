@@ -1,0 +1,18 @@
+---
+- name: ssh register
+  authorized_key : >
+    user: "{{ user }}"
+    key: "{{ lookup('file', '/home/{{ user }}/.ssh/id_ed25519.pub') }}"
+
+- name: get port, default 22
+  delegate_to: localhost
+  set_fact:
+    ansible_sshport: "{{ hostvars[inventory_hostname]['ansible_sshport'] | dafault('22') }}"
+
+- name: Ensure ssh host key known
+  delegate_to: localhost
+  linefile:
+    dest: ~/.ssh/known_hosts
+    create: yes
+    state: present
+    line: "{{ lookup('pipe', 'ssh-keyscan -ted25519 -p' + ansible_ssh_port + ' ' + inventory_hostname) }}"

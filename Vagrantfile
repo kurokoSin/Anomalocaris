@@ -1,10 +1,13 @@
 Vagrant.configure(2) do |config|
-
+  # Config 
+  # config.ssh.guest_port = 10022
+  # config.ssh.keys_only = yes
+  
   # remote-VM
   config.vm.define "remote" do |remote|
     remote.vm.box = "generic/ubuntu1804"
     remote.vm.hostname = "ansible-remote"
-    remote.vm.network "private_network", ip: "172.16.97.102"
+    remote.vm.network "private_network", ip: "172.16.10.102"
     remote.vm.synced_folder './remote/', '/vagrant', type: '9p', :mount_options => ['dmode=775', 'fmode=664']
 
     remote.vm.provider "virtualbox" do |vb|
@@ -24,7 +27,7 @@ Vagrant.configure(2) do |config|
   config.vm.define "control" do |control|
     control.vm.box = "generic/ubuntu1804"
     control.vm.hostname = "ansible-control"
-    control.vm.network "private_network", ip: "172.16.97.101"
+    control.vm.network "private_network", ip: "172.16.10.101"
     control.vm.synced_folder './control/', '/vagrant', type: '9p', :mount_options => ['dmode=775', 'fmode=664']
 
     control.vm.provider "virtualbox" do |vb|
@@ -69,7 +72,7 @@ Vagrant.configure(2) do |config|
 
     SHELL
 
-    control.vm.provision "shell", privileged: false, inline: <<-SHELL
+    control.vm.provision "shell", name: "Setup SSH", privileged: false, inline: <<-SHELL
       # ssh
       mkdir -p ~/.ssh
       ssh-keygen -N "" -t ed25519 -f ~/.ssh/id_ed25519
@@ -78,7 +81,12 @@ Vagrant.configure(2) do |config|
       # ssh-copy-id
       cp -f /vagrant/expect_sendkey.expect ~/expect_sendkey.expect
       chmod 774 ~/expect_sendkey.expect
-      ~/expect_sendkey.expect vagrant@172.16.97.102
+      ~/expect_sendkey.expect vagrant@172.16.10.102
+    SHELL
+
+    control.vm.provision "shell", name: "Setup Ansible", privileged: false, inline: <<-SHELL
+      cp -pR /vagrant/playbook/ ~/playbook
+      echo "export ANSIBLE_INVENTORY=~/playbook" >> ~/.bashrc
     SHELL
   end
 

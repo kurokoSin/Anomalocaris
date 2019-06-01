@@ -1,0 +1,23 @@
+---
+- name: disable ipv6
+  lineinfile: >
+    dest="/etc/sysctl.conf"
+    line="{{ item }}"
+  with_items:
+    - "net.ipv6.conf.all.disable_ipv6 = 1"
+    - "net.ipv6.conf.default.disable_ipv6 = 1"
+    - "net.ipv6.conf.eth0.disable_ipv6 = 1"
+    - "net.ipv6.conf.lo.disable_ipv6 = 1"
+  register: sysctl_ipv6
+
+- name: sysctl load
+  command: sysctl --load
+  when: sysctl_ipv6 is changed
+
+- name: update localtime
+  file: >
+    dest="/etc/localtime"
+    src="/usr/share/zoneinfo/Asia/Tokyo"
+    state=link
+    force=yes
+
